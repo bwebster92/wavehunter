@@ -1,0 +1,26 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./infra/k8s/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: bwebster92/wh-gatherer
+      context: gatherer
+      docker:
+        dockerfile: Dockerfile
+    - image: bwebster92/wh-keeper
+      context: keeper
+      docker:
+        dockerfile: Dockerfile
+    - image: bwebster92/wh-finder
+      context: finder
+      docker:
+        dockerfile: Dockerfile
+    - image: bwebster92/wh-hunter
+      context: hunter
+      docker:
+        dockerfile: Dockerfile

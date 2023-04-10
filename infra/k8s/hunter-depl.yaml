@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hunter-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hunter
+  template:
+    metadata:
+      labels:
+        app: hunter
+    spec:
+      containers:
+        - name: hunter
+          image: bwebster92/wh-hunter
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hunter-svc
+spec:
+  selector:
+    app: hunter
+  ports:
+    - name: hunter
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

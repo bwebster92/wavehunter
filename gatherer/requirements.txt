@@ -1,0 +1,7 @@
+scrapy
+scrapy-splash
+psycopg2
+w3lib
+itemloaders
+flask
+crochet

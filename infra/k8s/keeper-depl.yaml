@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keeper-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keeper
+  template:
+    metadata:
+      labels:
+        app: keeper
+    spec:
+      volumes:
+        - name: keeper-storage
+          persistentVolumeClaim:
+            claimName: keeper-pvc
+      containers:
+        - name: keeper
+          image: bwebster92/wh-keeper
+          env:
+            - name: POSTGRES_USER
+              value: wavehunter
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keeper-pwd-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - mountPath: "/var/lib/postgresql/data"
+              name: keeper-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keeper-svc
+spec:
+  selector:
+    app: keeper
+  ports:
+    - name: keeper
+      protocol: TCP
+      port: 5432
+      targetPort: 5432

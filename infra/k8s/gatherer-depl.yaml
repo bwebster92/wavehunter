@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatherer-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatherer
+  template:
+    metadata:
+      labels:
+        app: gatherer
+    spec:
+      containers:
+        - name: gatherer
+          image: bwebster92/wh-gatherer
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGHOST
+              value: keeper-svc
+            - name: PGUSER
+              value: wavehunter
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keeper-pwd-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGDATABASE
+              value: wavehunter
+            - name: PGPORT
+              value: '5432'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gatherer-svc
+spec:
+  selector:
+    app: gatherer
+  ports:
+    - name: gatherer
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

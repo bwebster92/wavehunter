@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatherer-splash-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatherer-splash
+  template:
+    metadata:
+      labels:
+        app: gatherer-splash
+    spec:
+      containers:
+        - name: splash
+          image: scrapinghub/splash
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gatherer-splash-svc
+spec:
+  selector:
+    app: gatherer-splash
+  ports:
+    - name: splash
+      protocol: TCP
+      port: 8050
+      targetPort: 8050

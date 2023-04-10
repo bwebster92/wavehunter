@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wavehunter-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/login
+            pathType: Prefix
+            backend:
+              service:
+                name: finder-svc
+                port:
+                  number: 3000
+          - path: /api/breaks
+            pathType: Prefix
+            backend:
+              service:
+                name: finder-svc
+                port:
+                  number: 3000
+          - path: /api/forecast
+            pathType: Prefix
+            backend:
+              service:
+                name: finder-svc
+                port:
+                  number: 3000
+          - path: /api/scrape
+            pathType: Prefix
+            backend:
+              service:
+                name: finder-svc
+                port:
+                  number: 3000
+          - path: /scrape
+            pathType: Prefix
+            backend:
+              service:
+                name: gatherer-svc
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hunter-svc
+                port:
+                  number: 3000
