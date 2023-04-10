@@ -14,18 +14,21 @@ router.put('/api/scrape', async (req, res) => {
 // From hunter - check spider status
 router.post('/api/scrape', async (req, res) => {
   const scrape = new Scrape(req.body);
-  await scrape.sync();
-  const [scrapeResults] = scrape.dbData;
 
-  if (!scrapeResults) {
-    throw new Error('Scrape lookup error');
-  }
+  const retrieveScrape = async (scrape) => {
+    await scrape.sync();
+    const [scrapeStatus] = scrape.dbData;
 
-  if (!scrapeResults.completed) {
-    // retry loop - poll db for scraped data
-  }
+    if (!scrapeStatus) {
+      throw new Error('Scrape lookup error');
+    } else if (scrapeStatus.completed) {
+      res.status(200).send(scrapeStatus);
+    } else if (!scrapeStatus.completed) {
+      setTimeout(retrieveScrape, 200);
+    }
+  };
 
-  res.status(200).send(scrapeResults);
+  retrieveScrape(scrape);
 });
 
 module.exports = {
