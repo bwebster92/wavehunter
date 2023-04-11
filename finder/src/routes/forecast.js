@@ -2,11 +2,12 @@ const axios = require('axios');
 const express = require('express');
 const { Scrape } = require('../models/scrape');
 const { Forecast } = require('../models/forecast');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
 router.post('/api/forecast', async (req, res) => {
-  // Start query, sync to db and clean data
+  // Initialise query, sync to db and clean data
   const forecastQuery = new Forecast({ break_id: req.body.break_id });
   await forecastQuery.sync();
   forecastQuery.process();
@@ -15,6 +16,7 @@ router.post('/api/forecast', async (req, res) => {
   const missingBreaks = req.body.break_id.filter(
     (id) => !forecastQuery.cleanData.breakList.includes(id)
   );
+  var scrape_payload = {};
 
   if (missingBreaks.length) {
     // Look up breaks in ongoing scrapes and remove from list
@@ -23,21 +25,15 @@ router.post('/api/forecast', async (req, res) => {
     const toScrape = missingBreaks.filter((id) => !inProgress.includes(id));
 
     if (toScrape.length) {
-      var scrape_payload = {
-        scrape_id: 'testparky', // Use an id generator here
+      scrape_payload = {
+        scrape_id: uuidv4(),
         scrape_params: { break_id: toScrape },
-        completed: false,
-        // Add timestamps
       };
 
       axios
         .post('http://gatherer-svc:3000/scrape', {
           spider: 'sf-forecast',
           scrape_payload,
-        })
-        .then(async (res) => {
-          const scrape = new Scrape(scrape_payload);
-          await scrape.save();
         })
         .catch((err) => {
           console.log(err.stack);

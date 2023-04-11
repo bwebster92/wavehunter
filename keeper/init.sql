@@ -25,9 +25,12 @@ CREATE TABLE users (
 );
 
 CREATE TABLE scrape (
-  scrape_id VARCHAR(50) PRIMARY KEY,
+  scrape_id uuid PRIMARY KEY,
   scrape_params JSON,
-  completed BOOLEAN not null
+  spider_name VARCHAR(50) not null,
+  completed BOOLEAN not null,
+  start_time timestamp with time zone,
+  end_time timestamp with time zone
 );
 
 INSERT INTO users (

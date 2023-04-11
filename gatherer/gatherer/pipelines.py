@@ -1,16 +1,13 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-# useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
+# https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 import os
 import logging
 import psycopg2
-import requests
-import json
+from datetime import datetime, timezone, timedelta
+
+from psycopg2.extras import Json
+from psycopg2.extensions import register_adapter
+register_adapter(dict, Json)
 
 # Load db conn parameters from env vars
 PGHOST = os.environ['PGHOST']
@@ -22,7 +19,6 @@ PGDATABASE = os.environ['PGDATABASE']
 class GathererPipeline:
     def open_spider(self, spider):
         logging.debug('Connecting to db...')
-
         try:
             self.connection = psycopg2.connect(
                 host=PGHOST,
@@ -34,7 +30,22 @@ class GathererPipeline:
         except:
             logging.debug('Db connection error.')
 
-        # Write scrape status directly here
+        # Record scrape details in db
+        self.cur.execute(
+            """
+            INSERT INTO scrape(
+              scrape_id, scrape_params, spider_name,
+              completed, start_time
+            )
+            VALUES (%s, %s, %s, false, %s)
+            """,
+            (
+                spider.payload['scrape_id'],
+                Json(spider.payload['scrape_params']),
+                spider.name, datetime.now(timezone.utc)
+            ),
+        )
+        self.connection.commit()
 
     def process_item(self, item, spider):
         try:
@@ -74,14 +85,20 @@ class GathererPipeline:
             return item
 
     def close_spider(self, spider):
-        # Update db directly with spider status
-        payload = {
-            'scrape_id': spider.payload['scrape_id'],
-            'scrape_params': json.dumps(spider.payload['scrape_params']),
-            'completed': True
-        }
-        requests.put('http://finder-svc:3000/api/scrape',
-                     json=payload)
+        # Update spider status in db
+        self.cur.execute(
+            """
+            UPDATE scrape
+            SET completed = true,
+                end_time = (%s)
+            WHERE scrape_id = (%s)
+            """,
+            (
+                datetime.now(timezone.utc),
+                spider.payload['scrape_id']
+            )
+        )
+        self.connection.commit()
 
         # Close db connection
         self.cur.close()

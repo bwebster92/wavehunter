@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { Breaks } = require('../models/breaks');
-const { Scrape } = require('../models/scrape');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 
@@ -18,9 +18,8 @@ router.get('/api/breaks', async (req, res) => {
     console.log('Requesting scrape...');
 
     const scrape_payload = {
-      scrape_id: 'testbreaks',
+      scrape_id: uuidv4(),
       scrape_params: {},
-      completed: false,
     };
 
     axios
@@ -29,11 +28,7 @@ router.get('/api/breaks', async (req, res) => {
         scrape_payload,
       })
       .then(async () => {
-        // Move this to gatherer
-        const scrape = new Scrape(scrape_payload);
-        await scrape.save();
-
-        res.status(200).send({});
+        res.status(200).send({ scrape_payload });
       })
       .catch((err) => {
         console.log(err.stack);
