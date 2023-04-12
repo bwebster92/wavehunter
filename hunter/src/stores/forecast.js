@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useScrapeStore } from './scrape';
@@ -8,7 +9,7 @@ export const useForecastStore = defineStore('forecast', () => {
   const breakData = ref({});
   const breakList = ref([]);
 
-  function retrieveBreaks() {
+  function getForecastData() {
     const scrape = useScrapeStore();
     axios
       .post('/api/forecast', { break_id: controls.break_id })
@@ -30,6 +31,6 @@ export const useForecastStore = defineStore('forecast', () => {
   return {
     breakData,
     breakList,
-    retrieveBreaks,
+    getForecastData,
   };
 });

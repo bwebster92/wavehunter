@@ -1,6 +1,6 @@
 scrapy
 scrapy-splash
-psycopg2
+psycopg
 w3lib
 itemloaders
 flask

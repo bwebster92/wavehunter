@@ -2,14 +2,11 @@
 
 import os
 import logging
-import psycopg2
 import pandas as pd
 from datetime import datetime, timezone
+import psycopg
+from psycopg.types.json import Jsonb
 from io import StringIO
-
-from psycopg2.extras import Json
-from psycopg2.extensions import register_adapter
-register_adapter(dict, Json)
 
 # Load db conn parameters from env vars
 PGHOST = os.environ['PGHOST']
@@ -23,16 +20,16 @@ class GathererPipeline:
     def open_spider(self, spider):
         logging.debug('Connecting to db...')
         try:
-            self.connection = psycopg2.connect(
+            self.connection = psycopg.connect(
                 host=PGHOST,
                 user=PGUSER,
                 password=PGPASSWORD,
                 dbname=PGDATABASE
             )
             self.cur = self.connection.cursor()
-        except (Exception, psycopg2.DatabaseError) as error:
+        except (Exception, psycopg.DatabaseError) as error:
             logging.debug("Error: %s" % error)
-            self.conn.rollback()
+            self.connection.rollback()
             return 1
 
         # Record scrape details in db
@@ -48,14 +45,14 @@ class GathererPipeline:
                 """,
                 (
                     spider.payload['scrape_id'],
-                    Json(spider.payload['scrape_params']),
+                    Jsonb(spider.payload['scrape_params']),
                     spider.name, datetime.now(timezone.utc)
                 ),
             )
             self.connection.commit()
-        except (Exception, psycopg2.DatabaseError) as error:
+        except (Exception, psycopg.DatabaseError) as error:
             logging.debug("Error: %s" % error)
-            self.conn.rollback()
+            self.connection.rollback()
             return 1
 
         # Initalise items container
@@ -67,19 +64,25 @@ class GathererPipeline:
 
     def close_spider(self, spider):
         logging.debug('Writing scraped items to db...')
-
         # Collect items in df
-        items_df = pd.DataFrame(self.item_list)
+        items_df = pd.DataFrame(
+            self.item_list, columns=self.item_list[0].keys())
         items_table = spider.name.replace('sf-', '')
 
-        # Load df into buffer
+        # Write df to buffer
         buffer = StringIO()
-        items_df.to_csv(buffer, index=False, header=False)
+        items_df.to_csv(buffer, sep=';', index=False, header=True)
         buffer.seek(0)
 
         try:
             # Copy from buffer to db
-            self.cur.copy_from(buffer, items_table, sep=",")
+            with buffer as f:
+                with self.cur.copy(
+                    psycopg.sql.SQL("""
+                    COPY {} FROM STDIN (FORMAT csv, DELIMITER ';', HEADER true)
+                    """).format(psycopg.sql.Identifier(items_table))
+                ) as copy:
+                    copy.write(f.read())
 
             # Update spider status in db
             logging.debug('Updating spider metadata...')
@@ -97,10 +100,12 @@ class GathererPipeline:
             )
             # Commit changes
             self.connection.commit()
+            logging.debug(
+                'Successfully wrote metadata and scraped items to db.')
 
-        except (Exception, psycopg2.DatabaseError) as error:
+        except (Exception, psycopg.DatabaseError) as error:
             logging.debug("Error: %s" % error)
-            self.conn.rollback()
+            self.connection.rollback()
             return 1
 
         # Close db connection

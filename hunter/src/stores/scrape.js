@@ -5,6 +5,7 @@ import { useForecastStore } from './forecast';
 export const useScrapeStore = defineStore('scrape', () => {
   const scrape_id = ref('');
   const scrape_params = ref({});
+  const spider_name = ref('');
   const completed = ref(false);
   const start_time = ref('');
   const end_time = ref('');
@@ -16,7 +17,7 @@ export const useScrapeStore = defineStore('scrape', () => {
       .then((res) => {
         this.$patch(res.data);
         if (completed.value) {
-          forecast.retrieveBreaks();
+          forecast.getForecastData();
         }
       })
       .catch((err) => console.log(err.stack));
@@ -25,6 +26,7 @@ export const useScrapeStore = defineStore('scrape', () => {
   return {
     scrape_id,
     scrape_params,
+    spider_name,
     completed,
     start_time,
     end_time,

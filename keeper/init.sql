@@ -8,7 +8,7 @@ CREATE TABLE forecast (
   last_updated VARCHAR(25),
   break_id VARCHAR(200),
   forecast_time VARCHAR(200), --this is probably a good primary key
-  swell_info JSON not null,
+  swell_info JSONB not null,
   wind_speed VARCHAR(200),
   wind_direction VARCHAR(200),
   wind_state VARCHAR(200)

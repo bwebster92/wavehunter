@@ -8,6 +8,9 @@ const router = express.Router();
 
 router.post('/api/forecast', async (req, res) => {
   // Initialise query, sync to db and clean data
+  console.log(
+    'Received request for forecast data:\n' + JSON.stringify(req.body)
+  );
   const forecastQuery = new Forecast({ break_id: req.body.break_id });
   await forecastQuery.sync();
   forecastQuery.process();

@@ -1,8 +1,6 @@
-import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useBreaksStore } from './breaks';
-import { useForecastStore } from './forecast';
 
 export const useControlsStore = defineStore('controls', () => {
   const breaks = useBreaksStore();
@@ -33,6 +31,5 @@ export const useControlsStore = defineStore('controls', () => {
     windState,
     windDirection,
     breaksByRegion,
-    retrieveBreaks,
   };
 });

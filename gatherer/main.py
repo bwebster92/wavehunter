@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import logging
-import psycopg2
+import psycopg
 
 from flask import Flask, request, session
 from scrapy.crawler import CrawlerRunner
@@ -20,19 +20,22 @@ PGUSER = os.environ['PGUSER']
 PGPASSWORD = os.environ['PGPASSWORD']
 PGDATABASE = os.environ['PGDATABASE']
 
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 retries = 5
 for attempt in range(retries):
     try:
-        connection = psycopg2.connect(
+        connection = psycopg.connect(
             host=PGHOST,
             user=PGUSER,
             password=PGPASSWORD,
             dbname=PGDATABASE
         )
         connection.close()
+        logging.debug('Successfully connected to db')
         break
     except:
         time.sleep(1)
+        logging.debug(f'Failed db connection attempt {attempt}')
 
 # Define flask API
 app = Flask(__name__)

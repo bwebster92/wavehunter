@@ -19,6 +19,6 @@ class SfBreaksSpider(scrapy.Spider):
             else:
                 for id in break_id:
                     l = BreaksLoader()
-                    l.add_value('region', current_region)
                     l.add_value('break_id', id)
+                    l.add_value('region', current_region)
                     yield l.load_item()

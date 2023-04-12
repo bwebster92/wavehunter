@@ -64,7 +64,7 @@ const forecast = useForecastStore();
           </v-col>
 
           <v-col cols="4">
-            <v-btn id="break-submit" @click="forecast.retrieveBreaks">
+            <v-btn id="break-submit" @click="forecast.getForecastData">
               Submit
             </v-btn>
           </v-col>
